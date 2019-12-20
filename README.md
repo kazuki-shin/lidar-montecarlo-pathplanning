@@ -1,5 +1,6 @@
 # cs598
-Methods for Building Autonomous Vehicles
+Methods for Building Autonomous Vehicles \
+https://youtu.be/LBv49TwdY2o
 
 # Requirments.txt
 ROS kinetic \
