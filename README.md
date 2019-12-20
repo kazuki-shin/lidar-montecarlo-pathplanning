@@ -2,11 +2,11 @@
 Methods for Building Autonomous Vehicles
 
 # Requirments.txt
-ROS kinetic
+ROS kinetic \
 OpenCV3
 
 # Scripts
-lidar_and_parser.py
-plan.py
-move.py
+lidar_and_parser.py \
+plan.py \
+move.py \
 steer_test.py
