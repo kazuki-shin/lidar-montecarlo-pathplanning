@@ -6,7 +6,7 @@
 This project allows the GEM to autonomously avoid both static and dynamic obstacles by planning and executing optimal driving path trajectories in real time. Later on, you can see Professor Forsyth blocking off the initial planned path so the vehicle replans and drives out of the highbay.
 
 ## Monte Carlo Tree Search Algorithm
-![](images/(monte.png)
+![](images/monte.png)
 ![](images/path1.png)
 ![](images/path2.png)
 
