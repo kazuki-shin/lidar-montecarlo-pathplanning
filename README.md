@@ -13,7 +13,7 @@ This project allows the GEM to autonomously avoid both static and dynamic obstac
 ## Occupancy grid generation from lidar point cloud
 ![](images/map.png)
 ![](images/dash.png)
-![](images/movie_pfilter.gif)
+![](images/movie_pfilter.gif) Gif by Bolton Bailey and Duc Phan Huy
 
 ## Final Demo
 [![](images/video.png)](https://youtu.be/LBv49TwdY2o)
