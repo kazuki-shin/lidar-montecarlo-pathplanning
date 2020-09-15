@@ -84,51 +84,27 @@ lidar_dir = './data'                                   # -- change this path
 def callback(msg):
     global latest_frame
     timestamp = msg.header.stamp.to_nsec()
-
-    # print('callback: msg : seq=%d, timestamp=%19d'%( msg.header.seq, timestamp))
     arr= msg_to_arr(msg)
-
-    '''
-        Parse input file
-    '''
 
     xs = [row[0] for row in arr]
     ys = [row[1] for row in arr]
     zs = [row[2] for row in arr]
     mat = np.asarray([xs,ys,zs]).T
 
-    # filtering - currently hardcoded
+    # preprocess by filtering 
     mat = mat[(mat[:,2]<0) & (mat[:,2]>-1.5)] # z-axis
     mask = (mat[:,0] < 1.5) & (mat[:,0]>-1.5) & (mat[:,1] < 1) & (mat[:,1] > -1) # x-axis
     mat = mat[np.invert(mask)]
-
-    #mat = mat[(mat[:,1]>=1) | (mat[:,1]<=-1)] # y-axis
-
     latest_frame = mat[:,[0,1]]
-
-    # from plan import display_plan
-    # import cv2
-    # img = display_plan(mat[:,[0,1]])
-    # cv2.imshow('plan',img)
-    # cv2.waitKey(1)
-
-    # 2D for planning
-    # grid = np.column_stack((mat[:,0],mat[:,1]))
-
-    # fig = plt.figure()
-    # plt.scatter(mat[:,0],mat[:,1])
-    # plt.show()
-
-    # return grid
 
 def steer_callback(msg):
     global current_steer_angle
     current_steer_angle = msg.output
-    #print("current_steer_angle: "+str(current_steer_angle))
 
 from threading import Lock, Thread
 import cv2
 from plan import display_plan
+
 latest_frame = None
 current_steer_angle = 0
 kill_thread = 0
@@ -136,6 +112,7 @@ current_speed = 0
 
 smooth_value = 0
 max_change = T*turn_rad_sec
+
 def render():
     print("render start")
     start = time.time()
@@ -144,11 +121,7 @@ def render():
             break
         if latest_frame is not None:
             img,node = display_plan(latest_frame,current_steer_angle)
-            # testing using the speed from the controller
-            # img,node = display_plan(latest_frame,current_steer_angle,current_speed)
 	    next_node = node.best_rollout[1]
-            # diff = max(min(next_node.control_value,max_change),-max_change)
-            # diff = clip(angle,-max_angle_change,max_angle_change)
             diff = next_node.control_value
             
             next_step = diff + current_steer_angle
