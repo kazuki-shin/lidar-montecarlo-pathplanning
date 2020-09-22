@@ -8,19 +8,18 @@ sys.path.insert(0,package_path)
 
 import os
 import numpy as np
-import rospy
-from sensor_msgs.msg import PointCloud2, PointField
-from pacmod_msgs.msg import SteeringPIDRpt3,SteeringPIDRpt1,SystemRptFloat
-
-from std_msgs.msg import String, Bool, Float32, Float64
-from steer_test import sendSteer
-import numpy as np
 import time
 from matplotlib import pyplot as plt
 from threading import Lock, Thread
-from plan import T,turn_rad_sec,max_steer_angle,clip
 
-from move import move_forward
+import rospy
+from sensor_msgs.msg import PointCloud2, PointField
+from pacmod_msgs.msg import SteeringPIDRpt3,SteeringPIDRpt1,SystemRptFloat
+from std_msgs.msg import String, Bool, Float32, Float64
+
+from move_gem import move_forward
+from steer_gem import sendSteer
+from path_planner import T,turn_rad_sec,max_steer_angle,clip
 
 frame_lock = Lock()
 
@@ -46,18 +45,13 @@ def fields_to_dtype(fields, point_step):
     np_dtype_list = []
     for f in fields:
         while offset < f.offset:
-            # might be extra padding between fields
             np_dtype_list.append(('%s%d' % (DUMMY_FIELD_PREFIX, offset), np.uint8))
             offset += 1
-
         dtype = pftype_to_nptype[f.datatype]
         if f.count != 1:
             dtype = np.dtype((dtype, f.count))
-
         np_dtype_list.append((f.name, dtype))
         offset += pftype_sizes[f.datatype] * f.count
-
-    # might be extra padding between points
     while offset < point_step:
         np_dtype_list.append(('%s%d' % (DUMMY_FIELD_PREFIX, offset), np.uint8))
         offset += 1
@@ -68,10 +62,7 @@ def msg_to_arr(msg):
 
     dtype_list = fields_to_dtype(msg.fields, msg.point_step)
     arr = np.fromstring(msg.data, dtype_list)
-
-    # remove the dummy fields that were added
     arr = arr[[fname for fname, _type in dtype_list if not (fname[:len(DUMMY_FIELD_PREFIX)] == DUMMY_FIELD_PREFIX)]]
-
     if msg.height == 1:
         return np.reshape(arr, (msg.width,))
     else:
@@ -91,7 +82,7 @@ def callback(msg):
     zs = [row[2] for row in arr]
     mat = np.asarray([xs,ys,zs]).T
 
-    # preprocess by filtering 
+    # preprocess by filtering
     mat = mat[(mat[:,2]<0) & (mat[:,2]>-1.5)] # z-axis
     mask = (mat[:,0] < 1.5) & (mat[:,0]>-1.5) & (mat[:,1] < 1) & (mat[:,1] > -1) # x-axis
     mat = mat[np.invert(mask)]
@@ -121,12 +112,11 @@ def render():
             break
         if latest_frame is not None:
             img,node = display_plan(latest_frame,current_steer_angle)
-	    next_node = node.best_rollout[1]
+	        next_node = node.best_rollout[1]
             diff = next_node.control_value
-            
+
             next_step = diff + current_steer_angle
             next_step = clip(next_step,-max_steer_angle,max_steer_angle)
-            # print("CURRENT_ANGLE: "+str(current_steer_angle))
             print("Plan Time: ",time.time() - start)
             start = time.time()
             sendSteer(next_step,turn_rad_sec+1)
@@ -134,12 +124,9 @@ def render():
             cv2.waitKey(1)
 
 def speed_callback(msg):
-    #print(msg)
     current_speed = msg.data
 
-
-
-if __name__=='__main__':
+def montecarlo_demo():
     print( '%s: calling main function ... ' % os.path.basename(__file__))
 
     if not os.path.exists(lidar_dir):
@@ -149,14 +136,13 @@ if __name__=='__main__':
     velodyne_subscriber = rospy.Subscriber('/lidar1/velodyne_points', PointCloud2, callback)
     steer_subscriber = rospy.Subscriber('/pacmod/parsed_tx/steer_rpt', SystemRptFloat, steer_callback)
     speed_subscriber = rospy.Subscriber("/pacmod/as_tx/vehicle_speed", Float64, speed_callback)
-    
+
     thread = Thread(target=render)
     thread.start()
-    
+
     desired_speed = 0.3
     move_forward(desired_speed)
 
-    # time.sleep(5)
     rospy.spin()
     kill_thread = 1
     thread.join()

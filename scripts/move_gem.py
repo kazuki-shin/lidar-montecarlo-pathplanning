@@ -159,7 +159,6 @@ def on_press(key):
 def move_forward(forward_speed):
     #pid_controller = PID_controller(p=1.6, i=0, d=0.7, sp_p=1.35, sp_d=0.25, sp_i=0.08, desired_speed=forward_speed) #params for straight line
     pid_controller = PID_controller(p=6.1, i=0, d=2.7, sp_p=1.30, sp_d=0.02, sp_i=0.40, desired_speed=forward_speed) #params for curve
-    #rospy.init_node('PID_controller', anonymous=True)
     rospy.Subscriber("/pacmod/as_tx/vehicle_speed", Float64, pid_controller.speed_control)
     enable_pub.publish(Bool(enabled))
     listener = Listener(on_press=on_press)
