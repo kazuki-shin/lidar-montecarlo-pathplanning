@@ -1,4 +1,9 @@
-# need to graph time vs steering angle under a given control value
+'''
+Path Planning on Polaris GEM using MCTS
+Matthew Chang, Kazuki Shin, Gabrielle Chen
+CS 598: MAAV Fall 2019
+'''
+
 import math
 import random
 import time
@@ -215,7 +220,7 @@ def display_plan(points, steer_angle, speed=S):
     return img, node
 
 
-if __name__ == "__main__":
+def planner_test():
     np.random.seed(0)
     data = np.load('gab.npy')
     data[:, 0] -= 4
